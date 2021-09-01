@@ -1,0 +1,27 @@
+Agenda:
+What is visibility?
+Bound to the way multicore CPUs works
+What is the happens before link
+What does volatile mean
+The impact of false sharing on code
+
+Synchronization and Visibility
+
+Happens Before link
+A "happens before" link exist between all synchronized or volatile write operations and
+All synchronized or volatile read operations that follows.
+
+
+How to write Correct Concurrent Code?
+1) Check for race conditions
+   - They occur on fields (not variables/parameters)
+   - 2 Threads are reading/writing a given field
+2) Check for the happens-before link
+   - Are the read/write volatile?
+   - Are they synchronized?
+   - if not, there is a probably bug
+3) Synchronized or volatile?
+   - Synchronized = atomicity
+   - Volatile = visibility
+
+ 

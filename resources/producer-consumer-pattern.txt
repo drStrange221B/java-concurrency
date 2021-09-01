@@ -1,0 +1,186 @@
+Agenda:
+- The Runnable Pattern to lunch and stop threads
+- What is the producer/consumer pattern
+- How to implement producer/consumer pattern using synchronization and the wait/notify pattern
+
+The Runnable Pattern
+This is the first pattern used to launch threads in java.
+
+How to lunch a new Thread?
+- A thread executes a task
+- the model for a task is the Runnable interface
+
+@FunctionalInterface
+public interface Runnable{
+    void run();
+}
+
+create a Runnable instance:
+1) Runnable run = new Runnable(){
+
+
+};
+
+2) Runnable run = ()-> {do something};
+
+
+A thread executes a task
+1) create an instance of Runnable
+2) create an instance of Thread with the task as a parameter
+3) Launch the thread.
+
+A common mistake:
+Do not call the run() method instead of the start() method!
+if you do, the task will executed in the current on the on the newly created thread.
+
+Runnable task = () -> System.out.println("thread example");
+Thread thread = new Thread(task);
+thread.start();
+do not run thread like thread.run();
+
+Note: knowing in which thread a task is executed: Thread.currentThread().getName()
+
+
+How to stop a thread?
+stop() method should not be used to stop the thread.
+
+The right method to stop the thread is by calling interrupt().
+Thread t1 = ...;
+t1.interrupt();
+this will send the signal to stop the thread.
+Calling interrupt() on a running thread: the code of the task should call isInterrupted() to terminate itself.
+
+
+The call to interrupt() causes the isInterrupted() method to return true. If the thread is blocked, or waiting, then
+the corresponding method will throw an InterruptedException
+
+The methods wait()/notify(), join() throw InterruptedException
+
+Producer/Consumer:
+A producer produces values in a buffer
+A consumer consumes the values from the buffer
+Be careful: the buffer can be empty, or full
+Producers and Consumers are run in their own thread
+
+Producer:
+
+int count = 0;
+int[] buffer = new int[BUFFER_SIZE];
+private Object lock = new Object();
+
+class Producer{
+
+    public void produce(){
+
+        synchronized(lock){
+        while(isFull(buffer)){
+            buffer[count++] = 1;
+        }
+        }
+    }
+}
+
+class Consumer{
+
+    synchronized(lock){
+    while(isEmpty()){
+        buffer[--count]=0;
+    }
+    }
+
+}
+ Does it fix our problem?
+
+ What happens if the buffer is empty?
+ The thread executing this consumer is blocked in the while loop. So the producer has no chance to add object
+ to the buffer!
+
+ Fixing the producer/consumer:
+ We need a way to "park" a thread while it is waiting for some data to be produced. without blocking all the
+ other thread is "parked"
+ This is the wait/notify pattern
+
+
+Wait()/Notify()
+wait() and notify() are two methods from the Object class. They are invoked on a given object
+The thread executing the invocation should hold the key of that object
+
+So: wait() and notify() cannot be invoked outside a synchronized block
+
+Calling wait() releases the key held by this thread and put that thread to a WAIT state.
+The only way to release a thread from a WAIT state is to notify it i.e call notify() on the lock it is waiting for
+
+Calling notify() releases a Thread in WAIT state and put it in RUNNABLE state. This is the only to release a
+waiting thread. The released thread is chosen randomly. These is also a notifyAll() method.
+
+
+Wait and notify:
+
+private Object lock
+
+
+class Producer{
+
+public void producer(){
+
+    synchronized(lock){
+        if(isFull(buffer))
+        {
+           lock.wait();
+           }
+           buffer[count++] = 1;
+           lock.notifyAll();
+        }
+
+    }
+
+}
+
+
+class Consumer{
+
+    synchronized(lock){
+     if(isEmpty(buffer)){
+          lock.wait();
+          }
+          buffer[count--] = 1;
+
+          lock.notifyAll();
+
+     }
+
+    }
+
+}
+
+
+States of Threads
+1) NEW - when the threads are first created
+2) RUNNING - when thread are started with start(). not it is waiting for thread scheduler to execute task.
+3) WAIT - when running thread releases lock
+4) BLOCK - when thread waits for lock to enter synchronized block of code
+5) TIMED-WAIT - Wait method is set with time or sleep(timeout)
+7) TERMINATED - when thread are terminated
+
+
+The thread scheduler can run the threads in the state RUNNABLE
+A BLOCKED thread can only run again when the key is released
+A WAITING thread can only run again when the notify() method is called
+
+Getting the state of a thread
+The getState() method returns a enumerated value of type
+Thread.State
+
+Thread t = ...;
+Thread.State state = t.getState();
+
+public enum State{
+    NEW, RUNNABLE, TERMINATED, BLOCKED, WAITING, TIMED_WAITING;
+}
+
+
+
+
+
+
+
